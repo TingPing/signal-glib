@@ -1,0 +1,15 @@
+/build-aux/
+/aclocal.m4
+/config.log
+/config.status
+/configure
+Makefile
+Makefile.in
+/libtool
+/autom4te.cache/
+.deps/
+.libs/
+.dirstamp
+*.o
+
+/sigtest
