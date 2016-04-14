@@ -20,7 +20,7 @@ LT_INIT
 LT_LIB_M
 
 PKG_PROG_PKG_CONFIG
-PKG_CHECK_MODULES([GLIB], [gobject-2.0])
+PKG_CHECK_MODULES([GLIB], [gio-2.0])
 PKG_CHECK_MODULES([NETTLE], [nettle])
 
 dnl AC_CHECK_LIB([libsignal-protocol-c], [axolotl_context_create])

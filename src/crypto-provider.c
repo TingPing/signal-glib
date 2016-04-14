@@ -18,37 +18,70 @@
 
 #include "crypto-provider.h"
 #include <string.h>
-#include <glib.h>
+#include <gio/gio.h>
 #include <nettle/hmac.h>
 #include <nettle/aes.h>
 #include <nettle/cbc.h>
 #include <nettle/ctr.h>
 #include <nettle/yarrow.h>
 
-#ifdef __linux__
-#include <sys/syscall.h>
-#include <linux/random.h>
-#else
-#error Platform not supported yet
-#endif
+
+static gboolean
+seed_random (struct yarrow256_ctx *ctx)
+{
+  g_autoptr(GFile) random_device = g_file_new_for_path("/dev/random");
+  g_autoptr(GFileInputStream) istream = g_file_read (random_device, NULL, NULL);
+  uint8_t random_bytes[YARROW256_SEED_FILE_SIZE];
+  size_t bytes_read;
+
+  g_debug("Seeding random number");
+
+  if (!istream)
+    {
+      g_debug("Failed to read from /dev/random");
+      return FALSE;
+    }
+
+
+  if (!g_input_stream_read_all (G_INPUT_STREAM(istream), random_bytes, YARROW256_SEED_FILE_SIZE, &bytes_read,
+                                NULL, NULL))
+    {
+      g_debug("Failed to get random bytes");
+      return FALSE;
+    }
+  else if (bytes_read != YARROW256_SEED_FILE_SIZE)
+    {
+      g_debug("Failed to get enough random bytes: %zu", bytes_read);
+      return FALSE;
+    }
+
+  g_debug("Seeded random number");
+  yarrow256_seed (ctx, YARROW256_SEED_FILE_SIZE, random_bytes);
+
+  return TRUE;
+}
 
 static int
 random_func (uint8_t *data,
              size_t   len,
              void    *user_data)
 {
-  struct yarrow256_ctx ctx;
-  const size_t slen = YARROW256_SEED_FILE_SIZE;
-  uint8_t random_seed[slen];
+  static struct yarrow256_ctx ctx;
+  static gboolean initted;
 
-  if (syscall(SYS_getrandom, random_seed, slen, GRND_RANDOM) < 0)
-    return AX_ERR_UNKNOWN;
+  if (G_UNLIKELY(initted == FALSE))
+    {
+      // Nettle doesn't provide a simpler API for this...
+      yarrow256_init (&ctx, 0, NULL);
 
-  // Nettle doesn't provide a simpler API for this...
-  yarrow256_init (&ctx, 0, NULL);
-  yarrow256_seed (&ctx, slen, random_seed);
+      if (!seed_random (&ctx))
+        return AX_ERR_UNKNOWN;
+
+      initted = TRUE;
+    }
+
+
   yarrow256_random (&ctx, len, data);
-
   return 0;
 }
 
