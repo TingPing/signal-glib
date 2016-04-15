@@ -16,7 +16,7 @@ AM_INIT_AUTOMAKE([1.11.1 dist-xz no-dist-gzip subdir-objects no-define foreign])
 AM_SILENT_RULES([yes])
 AM_PROG_CC_C_O
 
-LT_INIT
+LT_INIT([disable-static])
 LT_LIB_M
 
 PKG_PROG_PKG_CONFIG
