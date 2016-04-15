@@ -5,6 +5,7 @@ lib_LTLIBRARIES = libsignal-glib.la
 libsignal_glib_la_LIBADD = \
 	$(GLIB_LIBS) \
 	$(NETTLE_LIBS) \
+	$(LIBM) \
 	libsignal-protocol-c.la
 
 libsignal_glib_la_CFLAGS = \
@@ -49,3 +50,27 @@ libsignal_protocol_c_la_CFLAGS = \
 	-I$(top_srcdir)/contrib/libsignal-protocol-c/src/curve25519/ed25519/nacl_includes
 
 include Makefile.sources
+
+# --------------- tests ------------------
+
+LOG_COMPILER = tools/tap-test
+
+TESTS_ENVIRONMENT = \
+	GOBJECT_DEBUG=instance-count \
+	G_TEST_SRCDIR="$(abs_srcdir)" \
+	G_TEST_BUILDDIR="$(abs_builddir)" \
+	G_DEBUG=gc-friendly \
+	MALLOC_CHECK_=2 \
+	MALLOC_PERTURB_=$$(($${RANDOM:-256} % 256)) \
+	G_MESSAGES_DEBUG=all
+
+test_libs = $(GLIB_LIBS) libsignal-glib.la
+test_cflags = $(GLIB_CFLAGS) -I$(top_srcdir)/src
+
+TESTS = tests/test-client
+tests_test_client_CFLAGS = $(test_cflags)
+tests_test_client_LDADD = $(test_libs)
+
+check_PROGRAMS = $(TESTS)
+
+EXTRA_DIST = tools
