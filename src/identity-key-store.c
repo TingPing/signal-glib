@@ -40,7 +40,7 @@ get_identity_key_pair (axolotl_buffer **public_data,
   if (!data)
     {
       g_debug ("Failed to get identity key pair");
-      return 0;
+      return AX_SUCCESS;
     }
 
   if (ratchet_identity_key_pair_deserialize (&identity_key_pair, data, data_len, global_ctx))
@@ -56,7 +56,7 @@ get_identity_key_pair (axolotl_buffer **public_data,
   ec_public_key_serialize (public_data, pub_key);
   ec_private_key_serialize (private_data, priv_key);
 
-  return 0;
+  return AX_SUCCESS;
 }
 
 static int
@@ -73,7 +73,7 @@ get_local_registration_id (void     *user_data,
     }
 
   *registration_id = (uint32_t)id;
-  return 0;
+  return AX_SUCCESS;
 }
 
 static int
@@ -88,12 +88,12 @@ save_identity (const char *name, size_t name_len, uint8_t *key_data, size_t key_
           g_warning ("Failed to remove identity %s", name);
           return AX_ERR_UNKNOWN;
         }
-      return 0;
+      return AX_SUCCESS;
     }
 
   // TODO: Verify `name` is a valid key name
   key_file_set_data (file, REMOTE_KEY_GROUP, name, key_data, key_len);
-  return 0;
+  return AX_SUCCESS;
 }
 
 

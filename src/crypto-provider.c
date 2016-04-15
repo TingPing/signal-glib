@@ -82,7 +82,7 @@ random_func (uint8_t *data,
 
 
   yarrow256_random (&ctx, len, data);
-  return 0;
+  return AX_SUCCESS;
 }
 
 static int
@@ -96,7 +96,7 @@ sha256_init_func (void         **hmac_context,
   hmac_sha256_set_key (ctx, key_len, key);
 
   *hmac_context = ctx;
-  return 0;
+  return AX_SUCCESS;
 }
 
 
@@ -110,7 +110,7 @@ sha256_update_func (void          *hmac_context,
 
   hmac_sha256_update (ctx, data_len, data);
 
-  return 0;
+  return AX_SUCCESS;
 }
 
 
@@ -126,7 +126,7 @@ sha256_final_func (void            *hmac_context,
 
 
   if ((*output = axolotl_buffer_create (digest, SHA256_DIGEST_SIZE)))
-    return 0;
+    return AX_SUCCESS;
   else
     return AX_ERR_NOMEM;
 }
@@ -152,7 +152,7 @@ sha512_digest_func (axolotl_buffer **output,
   sha512_digest (&ctx, SHA512_DIGEST_SIZE, (uint8_t*)&digest);
 
   if ((*output = axolotl_buffer_create (digest, SHA512_DIGEST_SIZE)))
-    return 0;
+    return AX_SUCCESS;
   else
     return AX_ERR_NOMEM;
 }
@@ -249,7 +249,7 @@ aes_encrypt_func (axolotl_buffer **output,
     return AX_ERR_UNKNOWN;
 
   if ((*output = axolotl_buffer_create (dest, plaintext_len))) // Correct size?
-    return 0;
+    return AX_SUCCESS;
   else
     return AX_ERR_NOMEM;
 }
@@ -287,7 +287,7 @@ aes_decrypt_func (axolotl_buffer **output,
     return AX_ERR_UNKNOWN;
 
   if ((*output = axolotl_buffer_create (dest, ciphertext_len)))
-    return 0;
+    return AX_SUCCESS;
   else
     return AX_ERR_NOMEM;
 }

@@ -6,7 +6,8 @@ sigtest_SOURCES = \
 	src/signal-client.c \
 	src/crypto-provider.c \
 	src/identity-key-store.c \
-	src/key-utils.c
+	src/key-utils.c \
+	src/pre-key-store.c
 
 noinst_HEADERS = \
 	src/crypto-provider.h \
