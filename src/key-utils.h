@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <axolotl/axolotl.h>
+#include <axolotl.h>
 #include <glib.h>
 
 uint8_t *key_file_get_data (GKeyFile *file, const char *group, const char *key, size_t *out_len);

@@ -11,5 +11,9 @@ Makefile.in
 .libs/
 .dirstamp
 *.o
+*.a
+*.lo
+*.la
 
-/sigtest
+/signal-glib-*.tar.xz
+/signal-glib-*/

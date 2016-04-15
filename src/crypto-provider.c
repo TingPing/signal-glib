@@ -149,7 +149,7 @@ sha512_digest_func (axolotl_buffer **output,
 
   sha512_init (&ctx);
   sha512_update (&ctx, data_len, data);
-  sha512_digest (&ctx, SHA512_DIGEST_SIZE, (uint8_t*)&digest);
+  sha512_digest (&ctx, SHA512_DIGEST_SIZE, digest);
 
   if ((*output = axolotl_buffer_create (digest, SHA512_DIGEST_SIZE)))
     return AX_SUCCESS;

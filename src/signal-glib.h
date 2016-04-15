@@ -1,4 +1,4 @@
-/* crypto-provider.h
+/* signal-glib.h
  *
  * Copyright (C) 2016 Patrick Griffis <tingping@tingping.se>
  *
@@ -18,7 +18,11 @@
 
 #pragma once
 
-#include <axolotl.h>
+#include <glib-object.h>
 
-axolotl_crypto_provider *	sg_crypto_provider_new		(void);
+G_BEGIN_DECLS
 
+void signal_init (void);
+void signal_deinit (void);
+
+G_END_DECLS

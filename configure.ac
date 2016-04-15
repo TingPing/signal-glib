@@ -1,6 +1,6 @@
 AC_PREREQ([2.69])
 AC_INIT([signal-glib], [0.0.0])
-AC_CONFIG_SRCDIR([src/signal-client.c])
+AC_CONFIG_SRCDIR([src/signal-main.c])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_FILES([Makefile])
@@ -23,10 +23,6 @@ PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([GLIB], [gio-2.0])
 PKG_CHECK_MODULES([NETTLE], [nettle])
 
-dnl AC_CHECK_LIB([libsignal-protocol-c], [axolotl_context_create])
-
-AC_CHECK_HEADER([axolotl/axolotl.h])
-
 AX_APPEND_COMPILE_FLAGS([ \
 	-std=gnu99 \
 	-funsigned-char \
@@ -39,7 +35,6 @@ AX_APPEND_COMPILE_FLAGS([ \
 	-Winline \
 	-Wno-padded \
 	-Wno-unused-parameter \
-	-Wstrict-prototypes \
 	-Wmissing-prototypes \
 	-Werror=implicit-function-declaration \
 	-Werror=pointer-arith \
@@ -51,6 +46,7 @@ AX_APPEND_COMPILE_FLAGS([ \
 ])
 
 AX_APPEND_LINK_FLAGS([ \
+	-pie \
 	-Wl,-z,relro \
 	-Wl,-z,now \
 ])

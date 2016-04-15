@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+
+import os
+from os import path
+
+sources = []
+headers = []
+ignored = ('main.c')
+
+top_srcdir = path.join(path.abspath(path.dirname(__file__)), '..')
+prefix_len = len(top_srcdir) + 1
+srcdir = path.join(top_srcdir, 'contrib', 'libsignal-protocol-c', 'src')
+
+for entry in os.walk (srcdir):
+    for f in entry[2]:
+        if f.endswith('.c') and not f in ignored:
+            sources.append(path.join(entry[0][prefix_len:],f ))
+        elif f.endswith('.h'):
+            headers.append(path.join(entry[0][prefix_len:], f))
+
+with open(path.join(top_srcdir, 'Makefile.sources'), 'wb') as f:
+    f.write(b'libsignal_protocol_c_la_SOURCES =')
+    for source in sources:
+        f.write(b' \\\n\t%s' %bytes(source, 'ascii'))
+    f.write(b'\n\n')
+    f.write(b'noinst_HEADERS +=')
+    for header in headers:
+        f.write(b' \\\n\t%s' %bytes(header, 'ascii'))
+    f.write(b'\n\n')
+
