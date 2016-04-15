@@ -7,10 +7,13 @@ sigtest_SOURCES = \
 	src/crypto-provider.c \
 	src/identity-key-store.c \
 	src/key-utils.c \
-	src/pre-key-store.c
+	src/pre-key-store.c \
+	src/sender-key-store.c
 
 noinst_HEADERS = \
 	src/crypto-provider.h \
 	src/identity-key-store.h \
-	src/key-utils.h
+	src/key-utils.h \
+	src/pre-key-store.h \
+	src/sender-key-store.h
 
