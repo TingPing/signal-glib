@@ -25,6 +25,7 @@
 #include "crypto-provider.h"
 #include "identity-key-store.h"
 #include "pre-key-store.h"
+#include "signed-pre-key-store.h"
 #include "sender-key-store.h"
 
 axolotl_context *global_ctx;
@@ -123,10 +124,12 @@ main(void)
   axolotl_store_context *store_ctx;
   g_autofree axolotl_identity_key_store *identity_store = sg_identity_key_store_new (keystore);
   g_autofree axolotl_pre_key_store *pre_key_store = sg_pre_key_store_new (keystore);
+  g_autofree axolotl_signed_pre_key_store *signed_pre_key_store = sg_signed_pre_key_store_new (keystore);
   g_autofree axolotl_sender_key_store *sender_key_store = sg_sender_key_store_new (keystore);
   g_assert (axolotl_store_context_create (&store_ctx, global_ctx) == 0);
   g_assert (axolotl_store_context_set_identity_key_store (store_ctx, identity_store) == 0);
   g_assert (axolotl_store_context_set_pre_key_store (store_ctx, pre_key_store) == 0);
+  g_assert (axolotl_store_context_set_signed_pre_key_store (store_ctx, signed_pre_key_store) == 0);
   g_assert (axolotl_store_context_set_sender_key_store (store_ctx, sender_key_store) == 0);
 
   if (!g_key_file_save_to_file (keystore, "keys.ini", NULL))
