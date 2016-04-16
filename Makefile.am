@@ -21,6 +21,7 @@ libsignal_glib_la_SOURCES = \
 	src/key-utils.c \
 	src/pre-key-store.c \
 	src/sender-key-store.c \
+	src/session-store.c \
 	src/signed-pre-key-store.c
 
 libsignal_glib_la_LDFLAGS = \
@@ -36,6 +37,8 @@ noinst_HEADERS = \
 	src/key-utils.h \
 	src/pre-key-store.h \
 	src/sender-key-store.h \
+	src/session-store.h \
+	src/signal-glib-private.h \
 	src/signed-pre-key-store.h
 
 # ---------------- libsignal-protocol-c ----------------
@@ -64,8 +67,14 @@ TESTS_ENVIRONMENT = \
 	MALLOC_PERTURB_=$$(($${RANDOM:-256} % 256)) \
 	G_MESSAGES_DEBUG=all
 
-test_libs = $(GLIB_LIBS) libsignal-glib.la
-test_cflags = $(GLIB_CFLAGS) -I$(top_srcdir)/src
+test_libs = \
+	$(GLIB_LIBS) \
+	libsignal-glib.la
+
+test_cflags = \
+	$(GLIB_CFLAGS) \
+	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/contrib/libsignal-protocol-c/src
 
 TESTS = tests/test-client
 tests_test_client_CFLAGS = $(test_cflags)
