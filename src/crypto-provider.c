@@ -231,10 +231,7 @@ pad_message (const uint8_t *message,
   memcpy (padded, message, message_len);
 
   if (padding > 1)
-    {
-      MAYBE_SEED();
       yarrow256_random (&yarrow_ctx, (size_t)padding - 1, padded + message_len);
-    }
 
   padded[padded_len - 1] = padding;
 
@@ -270,6 +267,8 @@ aes_encrypt_func (axolotl_buffer **output,
     {
       g_autofree uint8_t *padded = NULL;
       size_t padded_len;
+
+      MAYBE_SEED();
 
       if (pad_message (plaintext, plaintext_len, &padded, &padded_len))
         cbc_encrypt (ctx, func, AES_BLOCK_SIZE, iv_copy, padded_len, dest, padded);
