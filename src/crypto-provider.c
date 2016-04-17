@@ -230,10 +230,9 @@ pad_message (const uint8_t *message,
 
   memcpy (padded, message, message_len);
 
-  if (padding > 1)
-      yarrow256_random (&yarrow_ctx, (size_t)padding - 1, padded + message_len);
-
-  padded[padded_len - 1] = padding;
+  // PKCS#7
+  for (uint8_t i = 0; i < padding; ++i)
+    padded[message_len + i] = padding;
 
   g_debug ("Padded message with %u bytes", padding);
 
@@ -241,6 +240,24 @@ pad_message (const uint8_t *message,
   *padded_len_out = padded_len;
   return TRUE;
 }
+
+static inline size_t
+get_padded_len (const uint8_t *data,
+                size_t data_len)
+{
+  // Remove padding (PKCS#7)
+  uint8_t padding_byte = data[data_len - 1];
+  if (padding_byte < AES_BLOCK_SIZE)
+    {
+      for (uint8_t i = 1; i <= padding_byte; ++i)
+        if (data[data_len - i] != padding_byte)
+          return data_len;
+
+      return data_len - padding_byte;
+    }
+  return data_len;
+}
+
 
 static int
 aes_encrypt_func (axolotl_buffer **output,
@@ -267,8 +284,6 @@ aes_encrypt_func (axolotl_buffer **output,
     {
       g_autofree uint8_t *padded = NULL;
       size_t padded_len;
-
-      MAYBE_SEED();
 
       if (pad_message (plaintext, plaintext_len, &padded, &padded_len))
         cbc_encrypt (ctx, func, AES_BLOCK_SIZE, iv_copy, padded_len, dest, padded);
@@ -303,6 +318,7 @@ aes_decrypt_func (axolotl_buffer **output,
   nettle_cipher_func *func = get_cipher_func (key_len, FALSE);
   g_autofree uint8_t *dest = g_new (uint8_t, ciphertext_len);
   g_autofree uint8_t *iv_copy = g_new (uint8_t, iv_len);
+  size_t dest_len = ciphertext_len;
   memcpy(iv_copy, iv, iv_len);
 
   g_return_val_if_fail (func != NULL, AX_ERR_UNKNOWN);
@@ -311,8 +327,8 @@ aes_decrypt_func (axolotl_buffer **output,
 
   if (cipher == AX_CIPHER_AES_CBC_PKCS5)
     {
-      // TODO: Remove padding
       cbc_decrypt (ctx, func, AES_BLOCK_SIZE, iv_copy, ciphertext_len, dest, ciphertext);
+      dest_len = get_padded_len (dest, dest_len);
     }
   else if (cipher == AX_CIPHER_AES_CTR_NOPADDING)
     {
@@ -321,7 +337,7 @@ aes_decrypt_func (axolotl_buffer **output,
   else
     return AX_ERR_UNKNOWN;
 
-  if ((*output = axolotl_buffer_create (dest, ciphertext_len)))
+  if ((*output = axolotl_buffer_create (dest, dest_len)))
     return AX_SUCCESS;
   else
     return AX_ERR_NOMEM;
