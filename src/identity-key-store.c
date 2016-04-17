@@ -105,10 +105,11 @@ is_trusted_identity (const char *name, size_t name_len, uint8_t *key_data, size_
   GKeyFile *file = user_data;
   g_autofree uint8_t *data = NULL;
   size_t data_len;
-  GError *err = NULL;
+  g_autoptr(GError) err = NULL;
 
   // Trust on first use
-  if (!g_key_file_has_key (file, REMOTE_KEY_GROUP, name, &err) && err == NULL)
+  if (!g_key_file_has_key (file, REMOTE_KEY_GROUP, name, &err) &&
+      (err == NULL || err->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND))
     {
       g_info ("First use of identiy %s, trusting", name);
       key_file_set_data (file, REMOTE_KEY_GROUP, name, key_data, key_len);
@@ -117,7 +118,6 @@ is_trusted_identity (const char *name, size_t name_len, uint8_t *key_data, size_
   else if (err)
     {
       g_warning("Error checking for key: %s", err->message);
-      g_error_free (err);
       return AX_ERR_UNKNOWN;
     }
 

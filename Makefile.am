@@ -25,8 +25,8 @@ libsignal_glib_la_SOURCES = \
 	src/signed-pre-key-store.c
 
 libsignal_glib_la_LDFLAGS = \
-	-export-symbols-regex '^signal_.+' \
 	-avoid-version
+#	-export-symbols-regex '^signal_.+'
 
 pkginclude_HEADERS = \
 	src/signal-glib.h
@@ -64,8 +64,7 @@ TESTS_ENVIRONMENT = \
 	G_TEST_BUILDDIR="$(abs_builddir)" \
 	G_DEBUG=gc-friendly \
 	MALLOC_CHECK_=2 \
-	MALLOC_PERTURB_=$$(($${RANDOM:-256} % 256)) \
-	G_MESSAGES_DEBUG=all
+	MALLOC_PERTURB_=$$(($${RANDOM:-256} % 256))
 
 test_libs = \
 	$(GLIB_LIBS) \

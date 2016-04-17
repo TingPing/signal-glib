@@ -30,5 +30,8 @@
 #include "pre-key-store.h"
 #include "signed-pre-key-store.h"
 #include "sender-key-store.h"
+#include "session-store.h"
+
+#include "key-utils.h"
 
 extern axolotl_context *global_ctx;
