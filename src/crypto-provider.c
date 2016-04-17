@@ -25,6 +25,7 @@
 #include <nettle/ctr.h>
 #include <nettle/yarrow.h>
 
+static struct yarrow256_ctx yarrow_ctx;
 
 static gboolean
 seed_random (struct yarrow256_ctx *ctx)
@@ -61,27 +62,23 @@ seed_random (struct yarrow256_ctx *ctx)
   return TRUE;
 }
 
+#define MAYBE_SEED() G_STMT_START \
+  if (G_UNLIKELY(!yarrow256_is_seeded (&yarrow_ctx))) \
+    { \
+      yarrow256_init (&yarrow_ctx, 0, NULL); \
+      if (!seed_random (&yarrow_ctx)) \
+        return AX_ERR_UNKNOWN; \
+    } \
+G_STMT_END
+
 static int
 random_func (uint8_t *data,
              size_t   len,
              void    *user_data)
 {
-  static struct yarrow256_ctx ctx;
-  static gboolean initted;
+  MAYBE_SEED();
 
-  if (G_UNLIKELY(initted == FALSE))
-    {
-      // Nettle doesn't provide a simpler API for this...
-      yarrow256_init (&ctx, 0, NULL);
-
-      if (!seed_random (&ctx))
-        return AX_ERR_UNKNOWN;
-
-      initted = TRUE;
-    }
-
-
-  yarrow256_random (&ctx, len, data);
+  yarrow256_random (&yarrow_ctx, len, data);
   return AX_SUCCESS;
 }
 
@@ -216,6 +213,38 @@ get_cipher_context (const uint8_t *key,
   }
 }
 
+static gboolean
+pad_message (const uint8_t *message,
+             size_t message_len,
+             uint8_t **padded_out,
+             size_t *padded_len_out)
+{
+  uint8_t *padded;
+  size_t padded_len;
+  uint8_t padding = (uint8_t)(AES_BLOCK_SIZE - (message_len % AES_BLOCK_SIZE));
+  if (!padding)
+    return FALSE;
+
+  padded_len = message_len + padding;
+  padded = g_new(uint8_t, padded_len);
+
+  memcpy (padded, message, message_len);
+
+  if (padding > 1)
+    {
+      MAYBE_SEED();
+      yarrow256_random (&yarrow_ctx, (size_t)padding - 1, padded + message_len);
+    }
+
+  padded[padded_len - 1] = padding;
+
+  g_debug ("Padded message with %u bytes", padding);
+
+  *padded_out = padded;
+  *padded_len_out = padded_len;
+  return TRUE;
+}
+
 static int
 aes_encrypt_func (axolotl_buffer **output,
                   int              cipher,
@@ -229,7 +258,7 @@ aes_encrypt_func (axolotl_buffer **output,
 {
   g_autofree void *ctx = get_cipher_context (key, key_len, TRUE);
   nettle_cipher_func *func = get_cipher_func (key_len, TRUE);
-  g_autofree uint8_t *dest = g_new (uint8_t, plaintext_len);
+  g_autofree uint8_t *dest = g_new (uint8_t, plaintext_len + AES_BLOCK_SIZE);
   g_autofree uint8_t *iv_copy = g_new (uint8_t, iv_len);
   memcpy(iv_copy, iv, iv_len);
 
@@ -239,7 +268,13 @@ aes_encrypt_func (axolotl_buffer **output,
 
   if (cipher == AX_CIPHER_AES_CBC_PKCS5)
     {
-      cbc_encrypt (ctx, func, AES_BLOCK_SIZE, iv_copy, plaintext_len, dest, plaintext);
+      g_autofree uint8_t *padded = NULL;
+      size_t padded_len;
+
+      if (pad_message (plaintext, plaintext_len, &padded, &padded_len))
+        cbc_encrypt (ctx, func, AES_BLOCK_SIZE, iv_copy, padded_len, dest, padded);
+      else
+        cbc_encrypt (ctx, func, AES_BLOCK_SIZE, iv_copy, plaintext_len, dest, plaintext);
     }
   else if (cipher == AX_CIPHER_AES_CTR_NOPADDING)
     {
@@ -277,6 +312,7 @@ aes_decrypt_func (axolotl_buffer **output,
 
   if (cipher == AX_CIPHER_AES_CBC_PKCS5)
     {
+      // TODO: Remove padding
       cbc_decrypt (ctx, func, AES_BLOCK_SIZE, iv_copy, ciphertext_len, dest, ciphertext);
     }
   else if (cipher == AX_CIPHER_AES_CTR_NOPADDING)
