@@ -96,11 +96,12 @@ new_store (const char *filename)
   key_file_set_data (keystore, "identity", "key-pair", axolotl_buffer_data (data), axolotl_buffer_len (data));
 
   if (!g_key_file_save_to_file (keystore, filename, NULL))
-    g_debug("Failed to save keys-1.ini");
+    g_debug("Failed to save %s", filename);
 
   return store_ctx;
 }
 
+#if 0
 static session_pre_key_bundle *
 get_pre_key_bundle (axolotl_store_context *store_ctx)
 {
@@ -145,26 +146,157 @@ get_pre_key_bundle (axolotl_store_context *store_ctx)
 
   return bundle;
 }
+#endif
+
+#if 0
+static key_exchange_message *
+get_exchange_message (axolotl_store_context *store_ctx)
+{
+  key_exchange_message *message;
+  ratchet_identity_key_pair *identity_key_pair;
+  ec_public_key *
+  int ret;
+
+  ret = axolotl_identity_get_key_pair (store_ctx, &identity_key_pair);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+  identity_key = ratchet_identity_key_pair_get_public (identity_key_pair);
+  g_assert_nonnull (identity_key);
+
+  ret = key_exchange_message_create (&message, CIPHERTEXT_CURRENT_VERSION,
+                                     0, // sequence?
+                                    KEY_EXCHANGE_INITIATE_FLAG,
+                                     );
+
+  return message;
+}
+#endif
+
+static ec_public_key *
+create_public_key (void)
+{
+  int ret;
+  ec_key_pair *key_pair;
+  ec_public_key *public_key;
+
+  ret = curve_generate_key_pair(global_ctx, &key_pair);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+
+  public_key = ec_key_pair_get_public(key_pair);
+  AXOLOTL_REF(public_key);
+  AXOLOTL_UNREF(key_pair);
+  return public_key;
+}
+
+static key_exchange_message *
+create_exchange_message (axolotl_store_context *store_ctx)
+{
+  key_exchange_message *message;
+  ec_public_key *base_key = create_public_key ();
+  uint8_t base_key_signature[CURVE_SIGNATURE_LEN] = { 0 }; // TODO
+  ec_public_key *ratchet_key = create_public_key ();
+  ratchet_identity_key_pair *identity_key_pair;
+  ec_public_key *identity_key;
+  int ret;
+
+  ret = axolotl_identity_get_key_pair (store_ctx, &identity_key_pair);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+  identity_key = ratchet_identity_key_pair_get_public (identity_key_pair);
+  g_assert_nonnull (identity_key);
+
+  g_debug ("Creating key exchange message");
+
+  ret = key_exchange_message_create (&message,
+          CIPHERTEXT_CURRENT_VERSION, 0, KEY_EXCHANGE_INITIATE_FLAG,
+          base_key, base_key_signature, ratchet_key, identity_key);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+
+  return message;
+}
+
+#if 0
+static signal_message *
+create_signal_message (axolotl_store_context *store_ctx,
+                       const char *text)
+{
+  signal_message *message;
+
+  uint8_t mac_key[RATCHET_MAC_KEY_LENGTH] = { 0 };
+  int ret;
+
+  ret = signal_message_create (&message
+                               mac_key, sizeof(mac_key),
+                               1, 0, // Counters
+                               text, strlen(text),
+                               );
+
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+  return message;
+}
+
+static pre_key_signal_message *
+get_pre_key_message (axolotl_store_context *store_ctx,
+                     signal_message *send_message)
+{
+  pre_key_signal_message *message;
+  uint32_t registration_id;
+  int device_id = 1;
+  uint32_t pre_key_id = 1;
+  uint32_t signed_pre_key_id = 1;
+  ec_public_key *identity_key;
+  ratchet_identity_key_pair *identity_key_pair;
+  ec_public_key *base_key = create_public_key ();
+
+  int ret;
+  ret = axolotl_identity_get_local_registration_id (store_ctx, &registration_id);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+  ret = axolotl_identity_get_key_pair (store_ctx, &identity_key_pair);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+  identity_key = ratchet_identity_key_pair_get_public (identity_key_pair);
+  g_assert_nonnull (identity_key);
+
+
+  ret = pre_key_signal_message_create (&message, CIPHERTEXT_CURRENT_VERSION,
+                                       registration_id, pre_key_id,
+                                       signed_pre_key_id, NULL,
+                                       identity_key, send_message,
+                                       global_ctx);
+
+  return message;
+}
+
+#endif
 
 static void
 test_client (void)
 {
-  axolotl_store_context *store_ctx = new_store("keys-1.ini"), *other_person_store = new_store("keys-2.ini");
+  axolotl_store_context *store_ctx = new_store("keys-1.ini"),
+  	                    *other_person_store = new_store("keys-2.ini");
   axolotl_address address = {
     "test", 4, 1,
   };
-  session_builder *builder;
+  session_builder *builder, *other_builder;
   session_cipher *cipher;
-  ciphertext_message *encrypted_message;
+
+  key_exchange_message *initial = create_exchange_message (store_ctx), *response;
+  ciphertext_message *encrypted_message = NULL;
   const char *message = "Hello World";
-  session_pre_key_bundle *other_bundle = get_pre_key_bundle (other_person_store);
   int ret;
 
   ret = session_builder_create (&builder, store_ctx, &address, global_ctx);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
 
-  ret = session_builder_process_pre_key_bundle (builder, other_bundle);
+  ret = session_builder_process (builder, &initial);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
+
+  ret = session_builder_create (&other_builder, other_person_store, &address, global_ctx);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+
+  ret = session_builder_process_key_exchange_message (other_builder, initial, &response);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+
+  ret = session_builder_process_key_exchange_message (builder, response, &response);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+  g_assert_null (response);
 
   ret = session_cipher_create (&cipher, store_ctx, &address, global_ctx);
   g_assert_cmpint (ret, ==, AX_SUCCESS);

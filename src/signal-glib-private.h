@@ -24,6 +24,7 @@
 #include <key_helper.h>
 #include <session_builder.h>
 #include <session_cipher.h>
+#include <protocol.h>
 
 #include "crypto-provider.h"
 #include "identity-key-store.h"
