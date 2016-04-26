@@ -62,11 +62,10 @@ new_keys (axolotl_store_context *store_ctx,
 }
 
 static axolotl_store_context *
-new_store (const char *filename)
+new_store (GKeyFile *keystore)
 {
   axolotl_store_context *store_ctx;
   int ret;
-  g_autoptr(GKeyFile) keystore = g_key_file_new ();
   g_autofree axolotl_identity_key_store *identity_store = sg_identity_key_store_new (keystore);
   g_autofree axolotl_pre_key_store *pre_key_store = sg_pre_key_store_new (keystore);
   g_autofree axolotl_signed_pre_key_store *signed_pre_key_store = sg_signed_pre_key_store_new (keystore);
@@ -94,9 +93,6 @@ new_store (const char *filename)
   ret = ratchet_identity_key_pair_serialize (&data, identity_key_pair);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
   key_file_set_data (keystore, "identity", "key-pair", axolotl_buffer_data (data), axolotl_buffer_len (data));
-
-  if (!g_key_file_save_to_file (keystore, filename, NULL))
-    g_debug("Failed to save %s", filename);
 
   return store_ctx;
 }
@@ -271,13 +267,16 @@ get_pre_key_message (axolotl_store_context *store_ctx,
 static void
 test_client (void)
 {
-  axolotl_store_context *store_ctx = new_store("keys-1.ini"),
-  	                    *other_person_store = new_store("keys-2.ini");
+  g_autoptr(GKeyFile) keystore = g_key_file_new ();
+  g_autoptr(GKeyFile) other_keystore = g_key_file_new ();
+  axolotl_store_context *store_ctx = new_store(keystore),
+  	                    *other_person_store = new_store(other_keystore);
   axolotl_address address = {
     "test", 4, 1,
   };
   session_builder *builder, *other_builder;
   session_cipher *cipher, *other_cipher;
+
 
   key_exchange_message *initial = create_exchange_message (store_ctx), *response;
   ciphertext_message *encrypted_message = NULL;
@@ -300,6 +299,12 @@ test_client (void)
   ret = session_builder_process_key_exchange_message (builder, response, &response);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
   g_assert_null (response);
+
+  // Save newly established sessions
+  if (!g_key_file_save_to_file (keystore, "keys-1.ini", NULL))
+    g_debug("Failed to save keys-1.ini");
+  if (!g_key_file_save_to_file (other_keystore, "keys-2.ini", NULL))
+    g_debug("Failed to save keys-2.ini");
 
   ret = session_cipher_create (&cipher, store_ctx, &address, global_ctx);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
