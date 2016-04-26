@@ -119,8 +119,7 @@ sha256_final_func (void            *hmac_context,
   struct hmac_sha256_ctx *ctx = hmac_context;
   uint8_t digest[SHA256_DIGEST_SIZE];
 
-  hmac_sha256_digest (ctx, SHA256_DIGEST_SIZE, (uint8_t*)&digest);
-
+  hmac_sha256_digest (ctx, SHA256_DIGEST_SIZE, digest);
 
   if ((*output = axolotl_buffer_create (digest, SHA256_DIGEST_SIZE)))
     return AX_SUCCESS;

@@ -223,7 +223,7 @@ create_signal_message (axolotl_store_context *store_ctx,
   uint8_t mac_key[RATCHET_MAC_KEY_LENGTH] = { 0 };
   int ret;
 
-  ret = signal_message_create (&message
+  ret = signal_message_create (&message,
                                mac_key, sizeof(mac_key),
                                1, 0, // Counters
                                text, strlen(text),
@@ -232,7 +232,9 @@ create_signal_message (axolotl_store_context *store_ctx,
   g_assert_cmpint (ret, ==, AX_SUCCESS);
   return message;
 }
+#endif
 
+#if 0
 static pre_key_signal_message *
 get_pre_key_message (axolotl_store_context *store_ctx,
                      signal_message *send_message)
@@ -275,10 +277,11 @@ test_client (void)
     "test", 4, 1,
   };
   session_builder *builder, *other_builder;
-  session_cipher *cipher;
+  session_cipher *cipher, *other_cipher;
 
   key_exchange_message *initial = create_exchange_message (store_ctx), *response;
   ciphertext_message *encrypted_message = NULL;
+  axolotl_buffer *plaintext_message;
   const char *message = "Hello World";
   int ret;
 
@@ -302,6 +305,14 @@ test_client (void)
   g_assert_cmpint (ret, ==, AX_SUCCESS);
   ret = session_cipher_encrypt (cipher, (guchar*)message, strlen(message), &encrypted_message);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
+
+  ret = session_cipher_create (&other_cipher, other_person_store, &address, global_ctx);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+  ret = session_cipher_decrypt_signal_message (cipher, (signal_message*)encrypted_message,
+                                                NULL, &plaintext_message);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+
+  g_assert_cmpstr ((char*)axolotl_buffer_data (plaintext_message), ==, message);
 
   g_clear_pointer(&encrypted_message, axolotl_buffer_free);
   g_clear_pointer(&cipher, session_cipher_free);
