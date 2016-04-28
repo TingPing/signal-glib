@@ -168,7 +168,7 @@ get_exchange_message (axolotl_store_context *store_ctx)
 #endif
 
 static ec_public_key *
-create_public_key (void)
+create_public_key (axolotl_buffer **signature)
 {
   int ret;
   ec_key_pair *key_pair;
@@ -178,6 +178,23 @@ create_public_key (void)
   g_assert_cmpint (ret, ==, AX_SUCCESS);
 
   public_key = ec_key_pair_get_public(key_pair);
+
+  if (signature)
+    {
+      axolotl_buffer *public_buf;
+
+      ret = ec_public_key_serialize (&public_buf, public_key);
+      g_assert_cmpint (ret, ==, AX_SUCCESS);
+
+      ret = curve_calculate_signature (global_ctx, signature,
+                                ec_key_pair_get_private (key_pair),
+                                axolotl_buffer_data (public_buf),
+                                axolotl_buffer_len (public_buf));
+
+      g_assert_cmpint (ret, ==, AX_SUCCESS);
+      AXOLOTL_UNREF(public_buf);
+    }
+
   AXOLOTL_REF(public_key);
   AXOLOTL_UNREF(key_pair);
   return public_key;
@@ -187,9 +204,9 @@ static key_exchange_message *
 create_exchange_message (axolotl_store_context *store_ctx)
 {
   key_exchange_message *message;
-  ec_public_key *base_key = create_public_key ();
-  uint8_t base_key_signature[CURVE_SIGNATURE_LEN] = { 0 }; // TODO
-  ec_public_key *ratchet_key = create_public_key ();
+  axolotl_buffer *base_key_signature;
+  ec_public_key *base_key = create_public_key (&base_key_signature);
+  ec_public_key *ratchet_key = create_public_key (NULL);
   ratchet_identity_key_pair *identity_key_pair;
   ec_public_key *identity_key;
   int ret;
@@ -203,9 +220,10 @@ create_exchange_message (axolotl_store_context *store_ctx)
 
   ret = key_exchange_message_create (&message,
           CIPHERTEXT_CURRENT_VERSION, 0, KEY_EXCHANGE_INITIATE_FLAG,
-          base_key, base_key_signature, ratchet_key, identity_key);
+          base_key, axolotl_buffer_data (base_key_signature), ratchet_key, identity_key);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
 
+  axolotl_buffer_free (base_key_signature);
   return message;
 }
 
@@ -281,7 +299,7 @@ test_client (void)
   key_exchange_message *initial = create_exchange_message (store_ctx), *response;
   ciphertext_message *encrypted_message = NULL;
   axolotl_buffer *plaintext_message;
-  const char *message = "Hello World";
+  const char *message = "Hello World2345";
   int ret;
 
   ret = session_builder_create (&builder, store_ctx, &address, global_ctx);
@@ -308,12 +326,12 @@ test_client (void)
 
   ret = session_cipher_create (&cipher, store_ctx, &address, global_ctx);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
-  ret = session_cipher_encrypt (cipher, (guchar*)message, strlen(message), &encrypted_message);
+  ret = session_cipher_encrypt (cipher, (guchar*)message, strlen(message) + 1, &encrypted_message);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
 
   ret = session_cipher_create (&other_cipher, other_person_store, &address, global_ctx);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
-  ret = session_cipher_decrypt_signal_message (cipher, (signal_message*)encrypted_message,
+  ret = session_cipher_decrypt_signal_message (other_cipher, (signal_message*)encrypted_message,
                                                 NULL, &plaintext_message);
   g_assert_cmpint (ret, ==, AX_SUCCESS);
 

@@ -221,7 +221,7 @@ pad_message (const uint8_t *message,
   uint8_t *padded;
   size_t padded_len;
   uint8_t padding = (uint8_t)(AES_BLOCK_SIZE - (message_len % AES_BLOCK_SIZE));
-  if (!padding)
+  if (padding == AES_BLOCK_SIZE)
     return FALSE;
 
   padded_len = message_len + padding;

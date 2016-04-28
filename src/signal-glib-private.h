@@ -21,6 +21,7 @@
 #include "signal-glib.h"
 
 #include <axolotl.h>
+#include <curve.h>
 #include <key_helper.h>
 #include <session_builder.h>
 #include <session_cipher.h>
