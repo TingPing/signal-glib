@@ -19,6 +19,7 @@
 #pragma once
 
 #include <glib-object.h>
+#include "signal-identity.h"
 
 G_BEGIN_DECLS
 

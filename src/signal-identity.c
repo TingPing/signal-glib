@@ -91,19 +91,21 @@ signal_identity_set_property (GObject *obj,
 static void
 signal_identity_finalize (GObject *object)
 {
-	SignalIdentity *self = (SignalIdentity *)object;
-	SignalIdentityPrivate *priv = signal_identity_get_instance_private (self);
+  SignalIdentity *self = (SignalIdentity *)object;
+  SignalIdentityPrivate *priv = signal_identity_get_instance_private (self);
 
   g_clear_object (&priv->storage);
-	G_OBJECT_CLASS (signal_identity_parent_class)->finalize (object);
+  G_OBJECT_CLASS (signal_identity_parent_class)->finalize (object);
 }
 
 static void
 signal_identity_class_init (SignalIdentityClass *klass)
 {
-	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->finalize = signal_identity_finalize;
+  object_class->finalize = signal_identity_finalize;
+  object_class->set_property = signal_identity_set_property;
+  object_class->get_property = signal_identity_get_property;
 
   g_object_class_install_property (object_class, PROP_STORAGE,
                                    g_param_spec_object ("storage", "Storage", "Storage for keys",

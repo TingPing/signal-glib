@@ -20,3 +20,4 @@ Makefile.in
 /signal-glib-*.tar.xz
 /signal-glib-*/
 /tests/test-client
+/tests/test-axolotl-client

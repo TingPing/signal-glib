@@ -79,13 +79,18 @@ test_libs = \
 
 test_cflags = \
 	$(GLIB_CFLAGS) \
-	-I$(top_srcdir)/src \
-	-I$(top_srcdir)/src/storage \
-	-I$(top_srcdir)/contrib/libsignal-protocol-c/src
+	-I$(top_srcdir)/src
 
 TESTS = tests/test-client
 tests_test_client_CFLAGS = $(test_cflags)
 tests_test_client_LDADD = $(test_libs)
+
+TESTS += tests/test-axolotl-client
+tests_test_axolotl_client_LDADD = $(test_libs)
+tests_test_axolotl_client_CFLAGS = \
+	$(test_cflags) \
+	-I$(top_srcdir)/src/storage \
+	-I$(top_srcdir)/contrib/libsignal-protocol-c/src
 
 check_PROGRAMS = $(TESTS)
 
