@@ -1,4 +1,4 @@
-/* signal-glib.h
+/* signal-storage.h
  *
  * Copyright (C) 2016 Patrick Griffis <tingping@tingping.se>
  *
@@ -18,15 +18,16 @@
 
 #pragma once
 
-#include "signal-glib.h"
+#include <glib-object.h>
 
-#include <axolotl.h>
-#include <curve.h>
-#include <key_helper.h>
-#include <session_builder.h>
-#include <session_cipher.h>
-#include <protocol.h>
+G_BEGIN_DECLS
 
-#include "crypto-provider.h"
+#define SIGNAL_TYPE_STORAGE (signal_storage_get_type())
+G_DECLARE_INTERFACE (SignalStorage, signal_storage, SIGNAL, STORAGE, GObject)
 
-extern axolotl_context *global_ctx;
+struct _SignalStorageInterface
+{
+  GTypeInterface parent;
+};
+
+G_END_DECLS

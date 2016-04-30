@@ -20,6 +20,13 @@
 #include <glib.h>
 #include "signal-glib.h"
 #include "signal-glib-private.h"
+#include "signal-storage.h"
+#include "identity-key-store.h"
+#include "pre-key-store.h"
+#include "signed-pre-key-store.h"
+#include "sender-key-store.h"
+#include "session-store.h"
+#include "key-utils.h"
 
 static void
 new_keys (axolotl_store_context *store_ctx,

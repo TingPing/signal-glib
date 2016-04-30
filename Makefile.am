@@ -12,34 +12,41 @@ libsignal_glib_la_CFLAGS = \
 	$(GLIB_CFLAGS) \
 	$(NETTLE_CFLAGS) \
 	-DG_LOG_DOMAIN=\"Signal\" \
-	-I$(top_srcdir)/contrib/libsignal-protocol-c/src
+	-I$(top_srcdir)/contrib/libsignal-protocol-c/src \
+	-I$(top_srcdir)/src/storage
 
 libsignal_glib_la_SOURCES = \
 	src/signal-main.c \
+	src/signal-identity.c \
+	src/signal-storage.c \
+	src/signal-storage-keyfile.c \
 	src/crypto-provider.c \
-	src/identity-key-store.c \
-	src/key-utils.c \
-	src/pre-key-store.c \
-	src/sender-key-store.c \
-	src/session-store.c \
-	src/signed-pre-key-store.c
+	src/storage/identity-key-store.c \
+	src/storage/key-utils.c \
+	src/storage/pre-key-store.c \
+	src/storage/sender-key-store.c \
+	src/storage/session-store.c \
+	src/storage/signed-pre-key-store.c
 
 libsignal_glib_la_LDFLAGS = \
 	-avoid-version
 #	-export-symbols-regex '^signal_.+'
 
 pkginclude_HEADERS = \
-	src/signal-glib.h
+	src/signal-glib.h \
+	src/signal-identity.h \
+	src/signal-storage.h \
+	src/signal-storage-keyfile.h
 
 noinst_HEADERS = \
 	src/crypto-provider.h \
-	src/identity-key-store.h \
-	src/key-utils.h \
-	src/pre-key-store.h \
-	src/sender-key-store.h \
-	src/session-store.h \
+	src/storage/identity-key-store.h \
+	src/storage/key-utils.h \
+	src/storage/pre-key-store.h \
+	src/storage/sender-key-store.h \
+	src/storage/session-store.h \
 	src/signal-glib-private.h \
-	src/signed-pre-key-store.h
+	src/storage/signed-pre-key-store.h
 
 # ---------------- libsignal-protocol-c ----------------
 
@@ -73,6 +80,7 @@ test_libs = \
 test_cflags = \
 	$(GLIB_CFLAGS) \
 	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/src/storage \
 	-I$(top_srcdir)/contrib/libsignal-protocol-c/src
 
 TESTS = tests/test-client

@@ -1,4 +1,4 @@
-/* signal-glib.h
+/* signal-identity.h
  *
  * Copyright (C) 2016 Patrick Griffis <tingping@tingping.se>
  *
@@ -18,15 +18,13 @@
 
 #pragma once
 
-#include "signal-glib.h"
+#include <glib-object.h>
 
-#include <axolotl.h>
-#include <curve.h>
-#include <key_helper.h>
-#include <session_builder.h>
-#include <session_cipher.h>
-#include <protocol.h>
+G_BEGIN_DECLS
 
-#include "crypto-provider.h"
+#define SIGNAL_TYPE_IDENTITY (signal_identity_get_type())
+G_DECLARE_FINAL_TYPE (SignalIdentity, signal_identity, SIGNAL, IDENTITY, GObject)
 
-extern axolotl_context *global_ctx;
+SignalIdentity *signal_identity_new_from_file (const char *file);
+
+G_END_DECLS
