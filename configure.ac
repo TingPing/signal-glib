@@ -31,6 +31,7 @@ AX_APPEND_COMPILE_FLAGS([ \
 	-fPIC \
 	-Wall \
 	-Wextra \
+	-Wstrict-prototypes \
 	-Wconversion \
 	-Winline \
 	-Wno-padded \
