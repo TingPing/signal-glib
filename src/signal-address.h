@@ -1,4 +1,4 @@
-/* signal-storage.h
+/* signal-address.h
  *
  * Copyright (C) 2016 Patrick Griffis <tingping@tingping.se>
  *
@@ -22,17 +22,23 @@
 
 G_BEGIN_DECLS
 
-#define SIGNAL_TYPE_STORAGE (signal_storage_get_type())
-G_DECLARE_INTERFACE (SignalStorage, signal_storage, SIGNAL, STORAGE, GObject)
-
-struct _SignalStorageInterface
+typedef struct
 {
-  GTypeInterface parent;
+  char *name;
+  gint32 device_id;
+} SignalAddress;
 
-  /* <private> */
-  gpointer (*get_axolotl_store) (SignalStorage *self);
-  gpointer (*get_identity_key) (SignalStorage *self);
-  guint64 (*get_registration_id) (SignalStorage *self);
-};
+
+#define SIGNAL_TYPE_ADDRESS (signal_address_get_type())
+GType          signal_address_get_type (void) G_GNUC_CONST;
+
+SignalAddress *signal_address_new (const char *name,
+                                   gint32      device_id);
+
+SignalAddress *signal_address_copy (SignalAddress *address);
+
+void           signal_address_free (SignalAddress *address);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(SignalAddress, signal_address_free)
 
 G_END_DECLS

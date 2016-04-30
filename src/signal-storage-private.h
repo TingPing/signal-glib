@@ -1,4 +1,4 @@
-/* signal-storage.h
+/* signal-storage-private.h
  *
  * Copyright (C) 2016 Patrick Griffis <tingping@tingping.se>
  *
@@ -18,21 +18,9 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include "signal-glib-private.h"
 
-G_BEGIN_DECLS
+axolotl_store_context *    signal_storage_get_axolotl_store   (SignalStorage *storage);
+guint64                    signal_storage_get_registration_id (SignalStorage *storage);
+ratchet_identity_key_pair *signal_storage_get_identity_key    (SignalStorage *storage);
 
-#define SIGNAL_TYPE_STORAGE (signal_storage_get_type())
-G_DECLARE_INTERFACE (SignalStorage, signal_storage, SIGNAL, STORAGE, GObject)
-
-struct _SignalStorageInterface
-{
-  GTypeInterface parent;
-
-  /* <private> */
-  gpointer (*get_axolotl_store) (SignalStorage *self);
-  gpointer (*get_identity_key) (SignalStorage *self);
-  guint64 (*get_registration_id) (SignalStorage *self);
-};
-
-G_END_DECLS

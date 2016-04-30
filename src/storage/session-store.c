@@ -23,19 +23,13 @@
 #include "key-utils.h"
 
 static char *
-address_to_b64 (const axolotl_address *address)
+address_to_key (const axolotl_address *address)
 {
-  g_autofree char *data;
-  int data_len;
-
   // We assume these are C strings
-  data = g_strdup_printf ("%s%c%d%n",
-                          address->name, '\0',
-                          address->device_id,
-                          &data_len);
-
-  g_assert (data_len >= 0);
-  return g_base64_encode ((uint8_t*)data, (size_t)data_len);
+  return g_strdup_printf ("%s%c%d",
+                          address->name, ';',
+                          address->device_id);
+  // FIXME TODO: Properly escape addresses so they are all valid keys
 }
 
 static int
@@ -45,7 +39,7 @@ load_session_func (axolotl_buffer **record,
 {
   GKeyFile *file = user_data;
   size_t data_len;
-  g_autofree char *key = address_to_b64 (address);
+  g_autofree char *key = address_to_key (address);
   g_autofree uint8_t *data = key_file_get_data (file, KEY_GROUP, key, &data_len);
 
   if (!data)
@@ -98,7 +92,7 @@ store_session_func (const axolotl_address *address,
                     void *user_data)
 {
   GKeyFile *file = user_data;
-  g_autofree char *key = address_to_b64 (address);
+  g_autofree char *key = address_to_key (address);
 
   key_file_set_data (file, KEY_GROUP, key, record, record_len);
   return AX_SUCCESS;
@@ -109,7 +103,7 @@ contains_session_func (const axolotl_address *address,
                        void *user_data)
 {
   GKeyFile *file = user_data;
-  g_autofree char *key = address_to_b64 (address);
+  g_autofree char *key = address_to_key (address);
 
   return g_key_file_has_key (file, KEY_GROUP, key, NULL);
 }
@@ -119,7 +113,7 @@ delete_session_func (const axolotl_address *address,
                      void *user_data)
 {
   GKeyFile *file = user_data;
-  g_autofree char *key = address_to_b64 (address);
+  g_autofree char *key = address_to_key (address);
 
   return g_key_file_remove_key (file, KEY_GROUP, key, NULL);
 }

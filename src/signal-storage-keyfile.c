@@ -52,6 +52,30 @@ G_DEFINE_TYPE_WITH_CODE (SignalStorageKeyfile, signal_storage_keyfile, G_TYPE_OB
                          G_IMPLEMENT_INTERFACE (SIGNAL_TYPE_STORAGE, signal_storage_keyfile_iface_init)
                          G_ADD_PRIVATE (SignalStorageKeyfile))
 
+static void
+generate_keys (SignalStorageKeyfile *self)
+{
+  SignalStorageKeyfilePrivate *priv = signal_storage_keyfile_get_instance_private (self);
+  GError *err = NULL;
+
+  if (!g_key_file_has_key (priv->keystore, "identity", "key-pair", &err) &&
+      (err == NULL || err->code == G_KEY_FILE_ERROR_GROUP_NOT_FOUND))
+    {
+      int ret;
+      axolotl_buffer *data;
+      ratchet_identity_key_pair *identity_key_pair;
+
+      g_debug("Generating identity key pair");
+      ret = axolotl_key_helper_generate_identity_key_pair(&identity_key_pair, global_ctx);
+      g_assert_cmpint (ret, ==, AX_SUCCESS);
+
+      ret = ratchet_identity_key_pair_serialize (&data, identity_key_pair);
+      g_assert_cmpint (ret, ==, AX_SUCCESS);
+      key_file_set_data (priv->keystore, "identity", "key-pair",
+                         axolotl_buffer_data (data), axolotl_buffer_len (data));
+    }
+}
+
 SignalStorageKeyfile *
 signal_storage_keyfile_new (const char *filename)
 {
@@ -98,6 +122,7 @@ signal_storage_keyfile_set_property (GObject *obj,
           g_warning ("%s", err->message);
           g_error_free (err);
         }
+      generate_keys (self); // Probably a better place to do this
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (obj, prop_id, pspec);
@@ -116,6 +141,28 @@ signal_storage_keyfile_save (SignalStorageKeyfile *self)
       g_warning ("%s", err->message);
       g_error_free (err);
     }
+}
+
+static axolotl_store_context *
+signal_storage_get_axolotl_store (SignalStorage *storage)
+{
+  SignalStorageKeyfile *self = SIGNAL_STORAGE_KEYFILE(storage);
+  SignalStorageKeyfilePrivate *priv = signal_storage_keyfile_get_instance_private (self);
+  return priv->store_ctx;
+}
+
+static ratchet_identity_key_pair *
+signal_storage_get_identity_key (SignalStorage *storage)
+{
+  SignalStorageKeyfile *self = SIGNAL_STORAGE_KEYFILE(storage);
+  SignalStorageKeyfilePrivate *priv = signal_storage_keyfile_get_instance_private (self);
+  ratchet_identity_key_pair *identity_key_pair;
+  int ret;
+
+  ret = axolotl_identity_get_key_pair (priv->store_ctx, &identity_key_pair);
+  g_assert_cmpint (ret, ==, AX_SUCCESS);
+
+  return identity_key_pair;
 }
 
 static void
@@ -150,6 +197,9 @@ signal_storage_keyfile_class_init (SignalStorageKeyfileClass *klass)
 static void
 signal_storage_keyfile_iface_init (SignalStorageInterface *iface)
 {
+  iface->get_axolotl_store = (gpointer (*)(SignalStorage*))signal_storage_get_axolotl_store;
+  iface->get_identity_key = (gpointer (*)(SignalStorage*))signal_storage_get_identity_key;
+  iface->get_registration_id = NULL;
 }
 
 static void

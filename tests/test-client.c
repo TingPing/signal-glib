@@ -29,6 +29,27 @@ test_client (void)
   bob = signal_identity_new_from_file ("keys-2.ini");
   g_assert_nonnull (alice);
   g_assert_nonnull (bob);
+
+  g_autoptr(SignalAddress) alices_address, bobs_address;
+
+  alices_address = signal_address_new ("Alice", 0);
+  bobs_address = signal_address_new ("Bob", 0);
+
+  SignalSessionManager *a_mgr, *b_mgr;
+
+  a_mgr = signal_identity_get_session_manager (alice);
+  b_mgr = signal_identity_get_session_manager (bob);
+
+  g_autoptr (GBytes) initial_message, response_message;
+
+  initial_message = signal_session_manager_new_exchange (a_mgr, bobs_address);
+  g_assert_nonnull (initial_message);
+  response_message = signal_session_manager_new_response (b_mgr, initial_message,
+                                                          alices_address, NULL);
+  g_assert_nonnull (response_message);
+
+  g_autoptr(SignalSession) alice_session = signal_session_manager_new_session (a_mgr, response_message, NULL);
+  g_assert_nonnull (alice_session);
 }
 
 int

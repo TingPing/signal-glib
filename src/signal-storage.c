@@ -17,8 +17,27 @@
  */
 
 #include "signal-storage.h"
+#include "signal-storage-private.h"
 
 G_DEFINE_INTERFACE (SignalStorage, signal_storage, G_TYPE_OBJECT)
+
+axolotl_store_context *
+signal_storage_get_axolotl_store (SignalStorage *storage)
+{
+  return SIGNAL_STORAGE_GET_IFACE (storage)->get_axolotl_store (storage);
+}
+
+ratchet_identity_key_pair *
+signal_storage_get_identity_key (SignalStorage *storage)
+{
+  return SIGNAL_STORAGE_GET_IFACE (storage)->get_identity_key (storage);
+}
+
+guint64
+signal_storage_get_registration_id (SignalStorage *storage)
+{
+  return SIGNAL_STORAGE_GET_IFACE (storage)->get_registration_id (storage);
+}
 
 static void
 signal_storage_default_init (SignalStorageInterface *iface)

@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include "signal-session-manager.h"
 
 G_BEGIN_DECLS
 
@@ -26,5 +26,6 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (SignalIdentity, signal_identity, SIGNAL, IDENTITY, GObject)
 
 SignalIdentity *signal_identity_new_from_file (const char *file);
+SignalSessionManager *signal_identity_get_session_manager (SignalIdentity *self);
 
 G_END_DECLS

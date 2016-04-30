@@ -40,7 +40,7 @@ get_identity_key_pair (axolotl_buffer **public_data,
   if (!data)
     {
       g_debug ("Failed to get identity key pair");
-      return AX_SUCCESS;
+      return -77; // Random number..
     }
 
   if (ratchet_identity_key_pair_deserialize (&identity_key_pair, data, data_len, global_ctx))

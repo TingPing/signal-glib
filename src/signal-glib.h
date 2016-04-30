@@ -18,8 +18,12 @@
 
 #pragma once
 
-#include <glib-object.h>
+#include "signal-address.h"
 #include "signal-identity.h"
+#include "signal-session.h"
+#include "signal-session-manager.h"
+#include "signal-storage.h"
+#include "signal-storage-keyfile.h"
 
 G_BEGIN_DECLS
 

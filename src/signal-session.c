@@ -1,4 +1,4 @@
-/* signal-storage.h
+/* signal-session.c
  *
  * Copyright (C) 2016 Patrick Griffis <tingping@tingping.se>
  *
@@ -16,23 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "signal-session.h"
+#include "signal-glib-private.h"
 
-#include <glib-object.h>
-
-G_BEGIN_DECLS
-
-#define SIGNAL_TYPE_STORAGE (signal_storage_get_type())
-G_DECLARE_INTERFACE (SignalStorage, signal_storage, SIGNAL, STORAGE, GObject)
-
-struct _SignalStorageInterface
+struct _SignalSession
 {
-  GTypeInterface parent;
-
-  /* <private> */
-  gpointer (*get_axolotl_store) (SignalStorage *self);
-  gpointer (*get_identity_key) (SignalStorage *self);
-  guint64 (*get_registration_id) (SignalStorage *self);
+  GObject parent_instance;
 };
 
-G_END_DECLS
+G_DEFINE_TYPE (SignalSession, signal_session, G_TYPE_OBJECT)
+
+static void
+signal_session_class_init (SignalSessionClass *klass)
+{
+}
+
+static void
+signal_session_init (SignalSession *self)
+{
+}

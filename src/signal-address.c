@@ -1,4 +1,4 @@
-/* signal-storage.h
+/* signal-address.c
  *
  * Copyright (C) 2016 Patrick Griffis <tingping@tingping.se>
  *
@@ -16,23 +16,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include "signal-address.h"
 
-#include <glib-object.h>
+G_DEFINE_BOXED_TYPE (SignalAddress, signal_address, signal_address_copy, signal_address_free)
 
-G_BEGIN_DECLS
-
-#define SIGNAL_TYPE_STORAGE (signal_storage_get_type())
-G_DECLARE_INTERFACE (SignalStorage, signal_storage, SIGNAL, STORAGE, GObject)
-
-struct _SignalStorageInterface
+SignalAddress *
+signal_address_new (const char *name,
+                    gint32      device_id)
 {
-  GTypeInterface parent;
+  SignalAddress *addr = g_new (SignalAddress, 1);
+  addr->name = g_strdup (name);
+  addr->device_id = device_id;
+  return addr;
+}
 
-  /* <private> */
-  gpointer (*get_axolotl_store) (SignalStorage *self);
-  gpointer (*get_identity_key) (SignalStorage *self);
-  guint64 (*get_registration_id) (SignalStorage *self);
-};
+SignalAddress *
+signal_address_copy (SignalAddress *address)
+{
+  g_return_val_if_fail (address != NULL, NULL);
 
-G_END_DECLS
+  return signal_address_new (address->name, address->device_id);
+}
+
+void
+signal_address_free (SignalAddress *address)
+{
+  if (address)
+    {
+      g_free (address->name);
+      g_free (address);
+    }
+}

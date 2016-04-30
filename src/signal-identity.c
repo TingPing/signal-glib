@@ -35,6 +35,7 @@ enum
 typedef struct
 {
   SignalStorage *storage;
+  SignalSessionManager *session_manager;
 } SignalIdentityPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (SignalIdentity, signal_identity, G_TYPE_OBJECT)
@@ -44,6 +45,19 @@ signal_identity_new_from_file (const char *file)
 {
   g_autoptr (SignalStorage) storage = SIGNAL_STORAGE(signal_storage_keyfile_new (file));
   return g_object_new (SIGNAL_TYPE_IDENTITY, "storage", storage, NULL);
+}
+
+SignalSessionManager *
+signal_identity_get_session_manager (SignalIdentity *self)
+{
+  SignalIdentityPrivate *priv = signal_identity_get_instance_private (self);
+
+  if (G_UNLIKELY(priv->session_manager == NULL))
+	{
+  	  priv->session_manager = g_object_new (SIGNAL_TYPE_SESSION_MANAGER, "storage", priv->storage, NULL);
+	}
+
+  return priv->session_manager;
 }
 
 static void
@@ -74,7 +88,6 @@ signal_identity_set_property (GObject *obj,
 {
   SignalIdentity *self = SIGNAL_IDENTITY(obj);
   SignalIdentityPrivate *priv = signal_identity_get_instance_private (self);
-  GError *err = NULL;
 
   switch (prop_id)
     {
@@ -95,6 +108,7 @@ signal_identity_finalize (GObject *object)
   SignalIdentityPrivate *priv = signal_identity_get_instance_private (self);
 
   g_clear_object (&priv->storage);
+  g_clear_object (&priv->session_manager);
   G_OBJECT_CLASS (signal_identity_parent_class)->finalize (object);
 }
 

@@ -17,7 +17,10 @@ libsignal_glib_la_CFLAGS = \
 
 libsignal_glib_la_SOURCES = \
 	src/signal-main.c \
+	src/signal-address.c \
 	src/signal-identity.c \
+	src/signal-session.c \
+	src/signal-session-manager.c \
 	src/signal-storage.c \
 	src/signal-storage-keyfile.c \
 	src/crypto-provider.c \
@@ -34,18 +37,21 @@ libsignal_glib_la_LDFLAGS = \
 
 pkginclude_HEADERS = \
 	src/signal-glib.h \
+	src/signal-address.h \
 	src/signal-identity.h \
+	src/signal-session.h \
+	src/signal-session-manager.h \
 	src/signal-storage.h \
 	src/signal-storage-keyfile.h
 
 noinst_HEADERS = \
+	src/signal-glib-private.h \
 	src/crypto-provider.h \
 	src/storage/identity-key-store.h \
 	src/storage/key-utils.h \
 	src/storage/pre-key-store.h \
 	src/storage/sender-key-store.h \
 	src/storage/session-store.h \
-	src/signal-glib-private.h \
 	src/storage/signed-pre-key-store.h
 
 # ---------------- libsignal-protocol-c ----------------
@@ -85,7 +91,7 @@ TESTS = tests/test-client
 tests_test_client_CFLAGS = $(test_cflags)
 tests_test_client_LDADD = $(test_libs)
 
-TESTS += tests/test-axolotl-client
+#TESTS += tests/test-axolotl-client
 tests_test_axolotl_client_LDADD = $(test_libs)
 tests_test_axolotl_client_CFLAGS = \
 	$(test_cflags) \
